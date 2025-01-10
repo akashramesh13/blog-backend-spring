@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.User;
 import com.akash.blog.backend.service.UserService;
 
@@ -23,12 +24,11 @@ public class ProfileController {
     UserService userService;
 
     @GetMapping
-    public ResponseEntity<User> getProfile() {
+    public ResponseEntity<UserDTO> getProfile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.isAuthenticated()) {
             String username = authentication.getName();
-            User user = userService.getUserProfileByUsername(username);
-            user.setPassword("");
+            UserDTO user = userService.getUserProfileByUsername(username);
             return ResponseEntity.ok(user);
         } else {
             return ResponseEntity.status(401).body(null);

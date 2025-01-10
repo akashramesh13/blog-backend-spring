@@ -1,17 +1,14 @@
 package com.akash.blog.backend.controller;
 
+import com.akash.blog.backend.dto.PostDto;
 import com.akash.blog.backend.entity.Post;
-import com.akash.blog.backend.entity.User;
 import com.akash.blog.backend.service.PostService;
-import com.akash.blog.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 @RestController
 @RequestMapping("/posts")
@@ -20,71 +17,29 @@ public class PostController {
     @Autowired
     private PostService postService;
 
-    @Autowired
-    private UserService userService;
-
-    @PostMapping
-    public ResponseEntity<Post> createPost(@RequestBody Post post) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-        User user = userService.getUserProfileByUsername(username);
-
-        post.setUser(user);
-        post.setCreatedAt(LocalDateTime.now());
-        post.setUpdatedAt(LocalDateTime.now());
-
-        Post createdPost = postService.createPost(post);
-        return ResponseEntity.ok(createdPost);
+    @GetMapping
+    public ResponseEntity<List<PostDto>> getAllPosts(Authentication authentication) {
+        return ResponseEntity.ok(postService.getAllPosts(authentication.getName()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Post> getPost(@PathVariable Long id) {
-        Optional<Post> post = postService.getPostById(id);
-        return post.map(ResponseEntity::ok)
-                   .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<PostDto> getPostById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(postService.getPostById(id, authentication.getName()));
+    }
+
+    @PostMapping
+    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, Authentication authentication) {
+        return ResponseEntity.ok(postService.createPost(postDto, authentication.getName()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post updatedPost) {
-        Optional<Post> postOptional = postService.getPostById(id);
-
-        if (postOptional.isPresent()) {
-            Post post = postOptional.get();
-
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth.getName();
-            if (!post.getUser().getUsername().equals(username)) {
-                return ResponseEntity.status(403).build(); // Forbidden
-            }
-
-            post.setTitle(updatedPost.getTitle());
-            post.setContent(updatedPost.getContent());
-            post.setUpdatedAt(LocalDateTime.now());
-
-            Post savedPost = postService.createPost(post);
-            return ResponseEntity.ok(savedPost);
-        }
-
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @RequestBody PostDto postDto, Authentication authentication) {
+        return ResponseEntity.ok(postService.updatePost(id, postDto, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        Optional<Post> postOptional = postService.getPostById(id);
-
-        if (postOptional.isPresent()) {
-            Post post = postOptional.get();
-
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String username = auth.getName();
-            if (!post.getUser().getUsername().equals(username)) {
-                return ResponseEntity.status(403).build(); // Forbidden
-            }
-
-            postService.deletePost(post);
-            return ResponseEntity.ok().build();
-        }
-
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
+        postService.deletePost(id, authentication.getName());
+        return ResponseEntity.noContent().build();
     }
 }
