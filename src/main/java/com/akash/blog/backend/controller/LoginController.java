@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.User;
 import com.akash.blog.backend.service.UserService;
 
@@ -25,7 +26,7 @@ public class LoginController {
 	private UserService userService;
 
 	@PostMapping
-	public ResponseEntity<String> login(HttpServletRequest request, @RequestBody User reqUser) {
+	public ResponseEntity<UserDTO> login(HttpServletRequest request, @RequestBody User reqUser) {
 		User user = userService.authenticate(reqUser.getUsername(), reqUser.getPassword());
 		if (user != null) {
 			Authentication auth = new UsernamePasswordAuthenticationToken(user.getUsername(), null,
@@ -37,9 +38,10 @@ public class LoginController {
 					SecurityContextHolder.getContext());
 
 			request.getSession().setAttribute("userId", user.getId());
-			return ResponseEntity.ok("Login successful");
+			UserDTO userDto = new UserDTO(user.getId(), user.getUsername());
+			return ResponseEntity.ok(userDto);
 		} else {
-			return ResponseEntity.status(401).body("Invalid credentials");
+			return ResponseEntity.status(401).body(null);
 		}
 	}
 }

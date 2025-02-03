@@ -3,6 +3,9 @@ package com.akash.blog.backend.controller;
 import com.akash.blog.backend.dto.PostDto;
 import com.akash.blog.backend.entity.Post;
 import com.akash.blog.backend.service.PostService;
+
+import jakarta.annotation.Nullable;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,9 +20,10 @@ public class PostController {
     @Autowired
     private PostService postService;
 
-    @GetMapping
-    public ResponseEntity<List<PostDto>> getAllPosts(Authentication authentication) {
-        return ResponseEntity.ok(postService.getAllPosts(authentication.getName()));
+    @GetMapping("/")
+    public ResponseEntity<List<PostDto>> getAllPosts(@Nullable Authentication authentication) {
+        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
+        return ResponseEntity.ok(postService.getAllPosts(username));
     }
 
     @GetMapping("/{id}")
