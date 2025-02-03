@@ -28,7 +28,8 @@ public class PostController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PostDto> getPostById(@PathVariable Long id, Authentication authentication) {
-        return ResponseEntity.ok(postService.getPostById(id, authentication.getName()));
+        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
+        return ResponseEntity.ok(postService.getPostById(id, username));
     }
 
     @PostMapping

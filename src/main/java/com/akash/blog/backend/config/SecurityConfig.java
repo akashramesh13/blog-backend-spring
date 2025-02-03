@@ -20,9 +20,9 @@ public class SecurityConfig {
             .csrf().disable()
             .authorizeHttpRequests()
             // Public routes (anyone can access these)
-            .requestMatchers("/", "/posts", "/posts/{id}", "/login", "/register").permitAll()
+            .requestMatchers("/", "/posts/", "/posts/**", "/login", "/register").permitAll()
             // Restrict edit, create, and delete to authenticated users only
-            .requestMatchers(HttpMethod.POST, "/posts").authenticated()
+            .requestMatchers(HttpMethod.POST, "/posts/").authenticated()
             .requestMatchers(HttpMethod.PUT, "/posts/{id}").authenticated()
             .requestMatchers(HttpMethod.DELETE, "/posts/{id}").authenticated()
             .anyRequest().authenticated()  // Require authentication for any other requests
