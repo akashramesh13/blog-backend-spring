@@ -17,4 +17,6 @@ public class PostDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean isOwner;
+    private CategoryDto category;
 }
+

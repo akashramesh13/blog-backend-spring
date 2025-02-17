@@ -1,8 +1,11 @@
 package com.akash.blog.backend.service;
 
+import com.akash.blog.backend.dto.CategoryDto;
 import com.akash.blog.backend.dto.PostDto;
+import com.akash.blog.backend.entity.Category;
 import com.akash.blog.backend.entity.Post;
 import com.akash.blog.backend.entity.User;
+import com.akash.blog.backend.repository.CategoryRepository;
 import com.akash.blog.backend.repository.PostRepository;
 import com.akash.blog.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,9 @@ public class PostService {
 
 	@Autowired
 	private UserRepository userRepository;
+	
+	@Autowired
+	private CategoryRepository categoryRepository;
 
 	public List<PostDto> getAllPosts(String username) {
 		return postRepository.findAll().stream().map(post -> convertToDto(post, username)).collect(Collectors.toList());
@@ -31,16 +37,27 @@ public class PostService {
 	}
 
 	public PostDto createPost(PostDto postDto, String username) {
-		User user = userRepository.findByUsername(username);
-		Post post = new Post();
-		post.setTitle(postDto.getTitle());
-		post.setContent(postDto.getContent());
-		post.setUser(user);
-		post.setCreatedAt(LocalDateTime.now());
-		post.setUpdatedAt(LocalDateTime.now());
-		post = postRepository.save(post);
-		return convertToDto(post, username);
+	    User user = userRepository.findByUsername(username);
+
+	    Category category = categoryRepository.findByName(postDto.getCategory().getName())
+	            .orElseGet(() -> {
+	                Category newCategory = new Category();
+	                newCategory.setName(postDto.getCategory().getName());
+	                return categoryRepository.save(newCategory);
+	            });
+
+	    Post post = new Post();
+	    post.setTitle(postDto.getTitle());
+	    post.setContent(postDto.getContent());
+	    post.setUser(user);
+	    post.setCategory(category);
+	    post.setCreatedAt(LocalDateTime.now());
+	    post.setUpdatedAt(LocalDateTime.now());
+
+	    post = postRepository.save(post);
+	    return convertToDto(post, username);
 	}
+
 
 	public PostDto updatePost(Long id, PostDto postDto, String username) {
 		Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
@@ -63,13 +80,18 @@ public class PostService {
 	}
 
 	private PostDto convertToDto(Post post, String username) {
-		PostDto postDto = new PostDto();
-		postDto.setId(post.getId());
-		postDto.setTitle(post.getTitle());
-		postDto.setContent(post.getContent());
-		postDto.setCreatedAt(post.getCreatedAt());
-		postDto.setUpdatedAt(post.getUpdatedAt());
-		postDto.setOwner(post.getUser().getUsername().equals(username));
-		return postDto;
+	    PostDto postDto = new PostDto();
+	    postDto.setId(post.getId());
+	    postDto.setTitle(post.getTitle());
+	    postDto.setContent(post.getContent());
+	    postDto.setCreatedAt(post.getCreatedAt());
+	    postDto.setUpdatedAt(post.getUpdatedAt());
+	    postDto.setOwner(post.getUser().getUsername().equals(username));
+	    if(post.getCategory() != null ) {
+	    CategoryDto categoryDto = new CategoryDto(post.getCategory().getId(), post.getCategory().getName());
+	    postDto.setCategory(categoryDto);
+	    }
+	    return postDto;
 	}
+
 }
