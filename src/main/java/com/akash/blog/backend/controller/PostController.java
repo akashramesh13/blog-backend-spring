@@ -7,6 +7,7 @@ import com.akash.blog.backend.service.PostService;
 import jakarta.annotation.Nullable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -21,9 +22,12 @@ public class PostController {
     private PostService postService;
 
     @GetMapping("/")
-    public ResponseEntity<List<PostDto>> getAllPosts(@Nullable Authentication authentication) {
-        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
-        return ResponseEntity.ok(postService.getAllPosts(username));
+    public Page<PostDto> getPosts(
+        @RequestParam(required = false) String category, 
+        @RequestParam(defaultValue = "0") int page, 
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        return postService.getPostsByCategory(category, page, size);
     }
 
     @GetMapping("/{id}")
