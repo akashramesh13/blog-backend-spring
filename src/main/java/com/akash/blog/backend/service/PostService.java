@@ -2,7 +2,6 @@ package com.akash.blog.backend.service;
 
 import com.akash.blog.backend.dto.CategoryDto;
 import com.akash.blog.backend.dto.PostDto;
-import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.Category;
 import com.akash.blog.backend.entity.Post;
 import com.akash.blog.backend.entity.User;
@@ -15,28 +14,28 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class PostService {
 
-	@Autowired
-	private PostRepository postRepository;
+    @Autowired
+    private PostRepository postRepository;
 
-	@Autowired
-	private UserRepository userRepository;
-	
-	@Autowired
-	private CategoryRepository categoryRepository;
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
 
-	public List<PostDto> getAllPosts(String username) {
-		return postRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
-	}
-	
-	public Page<PostDto> getPostsByCategory(String categoryName, int page, int size) {
+    public List<PostDto> getAllPosts(String username) {
+        return postRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
+    }
+    
+    public Page<PostDto> getPostsByCategory(String categoryName, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Post> postPage;
 
@@ -49,98 +48,106 @@ public class PostService {
         return postPage.map(this::convertToDto);
     }
 
-	public PostDto getPostById(Long id, String username) {
-		return postRepository.findById(id).map(post -> convertToDto(post, username))
-				.orElseThrow(() -> new RuntimeException("Post not found"));
-	}
+    public PostDto getPostById(Long id, String username) {
+        return postRepository.findById(id).map(post -> convertToDto(post, username))
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+    }
 
-	public PostDto createPost(PostDto postDto, String username) {
-	    User user = userRepository.findByUsername(username);
+    public PostDto createPost(PostDto postDto, String username) {
+        User user = userRepository.findByUsername(username);
 
-	    Category category = null;
-	    if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
-	        category = categoryRepository.findById(postDto.getCategory().getId())
-	                .orElseThrow(() -> new RuntimeException("Category not found"));
-	    }
+        Category category = null;
+        if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
+            category = categoryRepository.findById(postDto.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+        }
 
-	    Post post = new Post();
-	    post.setTitle(postDto.getTitle());
-	    post.setContent(postDto.getContent());
-	    post.setUser(user);
-	    post.setCategory(category);
-	    post.setCreatedAt(LocalDateTime.now());
-	    post.setUpdatedAt(LocalDateTime.now());
+        Post post = new Post();
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        post.setUser(user);
+        post.setCategory(category);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
 
-	    postRepository.save(post);
-	    return new PostDto(post.getId(), post.getTitle(), post.getContent(), 
-	            new UserDTO(user.getId(), user.getUsername()), post.getCreatedAt(), post.getUpdatedAt(), true, 
-	            category != null ? new CategoryDto(category.getId(), category.getName()) : null);
-	}
+        if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
+            String base64Image = postDto.getCoverImage();
+            
+            if (base64Image.contains(",")) {
+                base64Image = base64Image.split(",")[1];
+            }
 
-	public PostDto updatePost(Long id, PostDto postDto, String username) {
-	    Post post = postRepository.findById(id)
-	            .orElseThrow(() -> new RuntimeException("Post not found"));
+            post.setCoverImage(Base64.getDecoder().decode(base64Image.trim()));
+        }
 
-	    if (!post.getUser().getUsername().equals(username)) {
-	        throw new RuntimeException("Unauthorized");
-	    }
+        postRepository.save(post);
+        return convertToDto(post);
+    }
 
-	    Category category = null;
-	    if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
-	        category = categoryRepository.findById(postDto.getCategory().getId())
-	                .orElseThrow(() -> new RuntimeException("Category not found"));
-	    }
+    public PostDto updatePost(Long id, PostDto postDto, String username) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
-	    post.setTitle(postDto.getTitle());
-	    post.setContent(postDto.getContent());
-	    post.setCategory(category);
-	    post.setUpdatedAt(LocalDateTime.now());
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Unauthorized");
+        }
 
-	    postRepository.save(post);
-	    return new PostDto(post.getId(), post.getTitle(), post.getContent(), 
-	            new UserDTO(post.getUser().getId(), post.getUser().getUsername()), 
-	            post.getCreatedAt(), post.getUpdatedAt(), true, 
-	            category != null ? new CategoryDto(category.getId(), category.getName()) : null);
-	}
+        Category category = null;
+        if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
+            category = categoryRepository.findById(postDto.getCategory().getId())
+                    .orElseThrow(() -> new RuntimeException("Category not found"));
+        }
 
-	
-	public void deletePost(Long id, String username) {
-		Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
-		if (!post.getUser().getUsername().equals(username)) {
-			throw new RuntimeException("Unauthorized to delete this post");
-		}
-		postRepository.delete(post);
-	}
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        post.setCategory(category);
+        post.setUpdatedAt(LocalDateTime.now());
 
-	private PostDto convertToDto(Post post, String username) {
-	    PostDto postDto = new PostDto();
-	    postDto.setId(post.getId());
-	    postDto.setTitle(post.getTitle());
-	    postDto.setContent(post.getContent());
-	    postDto.setCreatedAt(post.getCreatedAt());
-	    postDto.setUpdatedAt(post.getUpdatedAt());
-	    postDto.setOwner(post.getUser().getUsername().equals(username));
-	    if(post.getCategory() != null ) {
-	    CategoryDto categoryDto = new CategoryDto(post.getCategory().getId(), post.getCategory().getName());
-	    postDto.setCategory(categoryDto);
-	    }
-	    return postDto;
-	}
-	
-	private PostDto convertToDto(Post post) {
-	    PostDto postDto = new PostDto();
-	    postDto.setId(post.getId());
-	    postDto.setTitle(post.getTitle());
-	    postDto.setContent(post.getContent());
-	    postDto.setCreatedAt(post.getCreatedAt());
-	    postDto.setUpdatedAt(post.getUpdatedAt());
-	    
-	    if (post.getCategory() != null) {
-	        postDto.setCategory(new CategoryDto(post.getCategory().getId(), post.getCategory().getName()));
-	    }
-	    
-	    return postDto;
-	}
+        if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
+            String base64Image = postDto.getCoverImage();
+            
+            if (base64Image.contains(",")) {
+                base64Image = base64Image.split(",")[1];
+            }
+
+            post.setCoverImage(Base64.getDecoder().decode(base64Image.trim()));
+        }
 
 
+        postRepository.save(post);
+        return convertToDto(post);
+    }
+
+    public void deletePost(Long id, String username) {
+        Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Unauthorized to delete this post");
+        }
+        postRepository.delete(post);
+    }
+
+    private PostDto convertToDto(Post post, String username) {
+        PostDto postDto = convertToDto(post);
+        postDto.setOwner(post.getUser().getUsername().equals(username));
+        return postDto;
+    }
+
+    private PostDto convertToDto(Post post) {
+        PostDto postDto = new PostDto();
+        postDto.setId(post.getId());
+        postDto.setTitle(post.getTitle());
+        postDto.setContent(post.getContent());
+        postDto.setCreatedAt(post.getCreatedAt());
+        postDto.setUpdatedAt(post.getUpdatedAt());
+
+        if (post.getCategory() != null) {
+            postDto.setCategory(new CategoryDto(post.getCategory().getId(), post.getCategory().getName()));
+        }
+
+        if (post.getCoverImage() != null) {
+            postDto.setCoverImage(Base64.getEncoder().encodeToString(post.getCoverImage()));
+        }
+
+        return postDto;
+    }
 }

@@ -18,5 +18,5 @@ public class PostDto {
     private LocalDateTime updatedAt;
     private boolean isOwner;
     private CategoryDto category;
+    private String coverImage;
 }
-

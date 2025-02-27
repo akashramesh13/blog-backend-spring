@@ -14,6 +14,7 @@ public class Post {
     private Long id;
 
     private String title;
+
     @Column(columnDefinition = "TEXT")
     private String content;
 
@@ -28,4 +29,7 @@ public class Post {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
+    @Lob
+    @Column(columnDefinition = "LONGBLOB")
+    private byte[] coverImage;
 }
