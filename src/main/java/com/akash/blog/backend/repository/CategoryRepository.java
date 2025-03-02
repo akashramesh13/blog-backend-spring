@@ -11,5 +11,5 @@ import com.akash.blog.backend.entity.Category;
 public interface CategoryRepository extends JpaRepository<Category, Long>{
 
 	Optional<Category> findByName(String name);
-
+    boolean existsByName(String name);
 }

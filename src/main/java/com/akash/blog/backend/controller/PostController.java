@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/posts")
@@ -31,7 +32,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<PostDto> getPostById(@PathVariable UUID id, Authentication authentication) {
         String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
         return ResponseEntity.ok(postService.getPostById(id, username));
     }
@@ -42,12 +43,12 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @RequestBody PostDto postDto, Authentication authentication) {
+    public ResponseEntity<PostDto> updatePost(@PathVariable UUID id, @RequestBody PostDto postDto, Authentication authentication) {
         return ResponseEntity.ok(postService.updatePost(id, postDto, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<Void> deletePost(@PathVariable UUID id, Authentication authentication) {
         postService.deletePost(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }

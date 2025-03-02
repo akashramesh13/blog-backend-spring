@@ -20,6 +20,13 @@ public class CategoryService {
 		return categoryRepository.findAll().stream().map(this::convertToDto).collect(Collectors.toList());
 	}
 	
+	 public CategoryDto createCategory(CategoryDto categoryDto) {
+	        Category category = new Category();
+	        category.setName(categoryDto.getName());
+	        category = categoryRepository.save(category);
+	        return new CategoryDto(category.getId(), category.getName());
+	    }
+	
 	private CategoryDto convertToDto(Category category) {
 	    CategoryDto categoryDto = new CategoryDto();
 	    categoryDto.setId(category.getId());

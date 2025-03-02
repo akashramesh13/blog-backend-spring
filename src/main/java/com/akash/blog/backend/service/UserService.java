@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -36,8 +37,14 @@ public class UserService {
         User savedUser = userRepository.save(user);
         return new UserDTO(savedUser.getId(), savedUser.getUsername());
     }
+    
+    public UserDTO getUserProfileById(UUID userId) {
+    	User user = userRepository.findById(userId).orElse(null);
+    	UserDTO userDto = new UserDTO(user.getId(), user.getUsername());
+    	return userDto;
+    }
 
-    public UserDTO updateUser(Long id, User updatedUser) {
+    public UserDTO updateUser(UUID id, User updatedUser) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isPresent()) {
             User user = userOpt.get();

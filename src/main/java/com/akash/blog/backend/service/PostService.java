@@ -2,6 +2,7 @@ package com.akash.blog.backend.service;
 
 import com.akash.blog.backend.dto.CategoryDto;
 import com.akash.blog.backend.dto.PostDto;
+import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.Category;
 import com.akash.blog.backend.entity.Post;
 import com.akash.blog.backend.entity.User;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,7 +50,7 @@ public class PostService {
         return postPage.map(this::convertToDto);
     }
 
-    public PostDto getPostById(Long id, String username) {
+    public PostDto getPostById(UUID id, String username) {
         return postRepository.findById(id).map(post -> convertToDto(post, username))
                 .orElseThrow(() -> new RuntimeException("Post not found"));
     }
@@ -84,7 +86,7 @@ public class PostService {
         return convertToDto(post);
     }
 
-    public PostDto updatePost(Long id, PostDto postDto, String username) {
+    public PostDto updatePost(UUID id, PostDto postDto, String username) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
@@ -118,7 +120,7 @@ public class PostService {
         return convertToDto(post);
     }
 
-    public void deletePost(Long id, String username) {
+    public void deletePost(UUID id, String username) {
         Post post = postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found"));
         if (!post.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Unauthorized to delete this post");
@@ -131,7 +133,10 @@ public class PostService {
         postDto.setOwner(post.getUser().getUsername().equals(username));
         return postDto;
     }
-
+    private UserDTO convertUserToUserDto(User user) {
+    	UserDTO userDto = new UserDTO(user.getId(), user.getUsername());
+    	return userDto;
+    }
     private PostDto convertToDto(Post post) {
         PostDto postDto = new PostDto();
         postDto.setId(post.getId());
@@ -139,6 +144,11 @@ public class PostService {
         postDto.setContent(post.getContent());
         postDto.setCreatedAt(post.getCreatedAt());
         postDto.setUpdatedAt(post.getUpdatedAt());
+        
+        if(post.getUser() != null) {
+        	UserDTO userDto = convertUserToUserDto(post.getUser());
+        	postDto.setUser(userDto);
+        }
 
         if (post.getCategory() != null) {
             postDto.setCategory(new CategoryDto(post.getCategory().getId(), post.getCategory().getName()));
