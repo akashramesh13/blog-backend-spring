@@ -17,31 +17,31 @@ import org.hibernate.type.SqlTypes;
 @Table(name = "post")
 @Data
 public class Post {
-
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(name = "id", columnDefinition = "BINARY(16)", nullable = false, unique = true)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-
+    
     private String title;
-
+    
     @Column(columnDefinition = "TEXT")
     private String content;
-
+    
     @ManyToOne
-    @JoinColumn(nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
+    
     private LocalDateTime createdAt;
+    
     private LocalDateTime updatedAt;
-
+    
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
-
+    
     @Lob
-    @Column(columnDefinition = "LONGBLOB")
+    @Column(name = "cover_image", columnDefinition = "BYTEA")
+    @JdbcTypeCode(SqlTypes.BINARY)
     private byte[] coverImage;
 }
