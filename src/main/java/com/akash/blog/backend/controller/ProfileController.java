@@ -22,6 +22,11 @@ public class ProfileController {
 
     @Autowired
     UserService userService;
+    
+    @GetMapping("/check")
+    public ResponseEntity<Void> checkAuth() {
+        return ResponseEntity.ok().build();
+    }
 
     @GetMapping({"/{profileId}", "/"})
     public ResponseEntity<UserDTO> getProfile(@PathVariable(required = false) UUID profileId) {
