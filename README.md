@@ -1,154 +1,184 @@
-# Blog Backend API
+# **Pixel Pursuit - Blog Backend API**
 
-A Spring Boot-based backend API for a blog platform with MongoDB for data storage and Redis for session management.
+A **modern, scalable, and secure** backend for **Pixel Pursuit**, built with **Spring Boot**, **MongoDB**, and **Redis**. Designed to deliver a seamless blogging experience with robust authentication, efficient post management, and optimized performance.
 
-## Features
+## 🌟 **Features**
 
-- User authentication and authorization
-- Blog post management (CRUD operations)
-- Category management
-- Image upload support (Base64)
-- Session management with Redis
-- MongoDB database integration
-- Environment-based configuration (local/prod)
+- **User Authentication & Authorization** – Secure login, registration, and session management
+- **Post Management** – Full CRUD operations for blog posts
+- **Category Management** – Organize posts with customizable categories
+- **Image Upload Support** – Store images using Base64 encoding
+- **Session Management with Redis** – Ensuring high performance and scalability
+- **Environment-Based Configurations** – Easily switch between local and production setups
+- **Spring Security Integration** – Protecting API endpoints with authentication
 
-## Tech Stack
+## 🛠️ **Tech Stack**
 
-- Java 17
-- Spring Boot
-- MongoDB
-- Redis
-- Spring Security
-- Maven
+- **Backend**:
+  - Java 17
+  - Spring Boot
+  - MongoDB (Local/Atlas)
+  - Redis (Local/Cloud)
+  - Spring Security
+  - Maven
 
-## Prerequisites
+## 🎯 **Core Functionality**
 
-- Java 17 or higher
-- MongoDB (local or MongoDB Atlas)
-- Redis (local or Redis Cloud)
-- Maven
+- **Authentication & Security**
 
-## Configuration
+  - User registration, login, and logout
+  - Secure session handling with Redis
+  - Protected API endpoints
 
-The application uses environment-based configuration. Create a `.env` file in the root directory with the following variables:
+- **Post Management**
 
-```env
+  - Create, edit, delete, and retrieve blog posts
+  - Image uploads via Base64 encoding
+  - Category tagging for better organization
+
+- **User Features**
+
+  - Profile management
+  - Personalized post management
+
+- **Performance & Scalability**
+  - Optimized database queries for fast response times
+  - Redis-backed session storage for high scalability
+
+## 📝 **Project Structure**
+
+```
+src/
+├── config/         # Application configuration
+├── controllers/    # API controllers
+├── models/         # Data models
+├── repositories/   # MongoDB repositories
+├── services/       # Business logic and services
+├── security/       # Authentication and authorization
+└── utils/          # Utility classes
+```
+
+## 🔧 **Configuration**
+
+Create a `.env` file with the following variables:
+
+```ini
 # Server Configuration
 PORT=10000
 SPRING_PROFILES_ACTIVE=prod/local
 
-# MongoDB Configuration
+# MongoDB
 MONGODB_URI=your_mongodb_uri
 
-# Logging Configuration
-LOG_LEVEL=INFO
-APP_LOG_LEVEL=INFO
-
-# Redis Configuration
+# Redis
 REDIS_HOST=your_redis_host
 REDIS_PORT=your_redis_port
 REDIS_USERNAME=your_redis_username
 REDIS_PASSWORD=your_redis_password
 
-# Session Configuration
+# Session
 SESSION_TIMEOUT=1800s
 ```
 
-## Local Development Setup
+## 🚀 **Local Development Setup**
 
-1. Clone the repository:
+1️⃣ **Clone the repository**
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/akashramesh13/blog-backend-spring.git
 cd blog-backend-spring
 ```
 
-2. Set up local MongoDB:
-```bash
-# Start MongoDB service
-sudo systemctl start mongodb
-```
+2️⃣ **Start MongoDB & Redis**
 
-3. Set up local Redis:
 ```bash
-# Start Redis service
+sudo systemctl start mongodb
 sudo systemctl start redis
 ```
 
-4. Set environment variables for local development:
+3️⃣ **Set environment variables for local development**
+
 ```bash
 export SPRING_PROFILES_ACTIVE=local
 ```
 
-5. Run the application:
+4️⃣ **Run the application**
+
 ```bash
 ./mvnw spring-boot:run
 ```
 
-## API Endpoints
+## 📡 **API Endpoints**
 
-### Authentication
-- `POST /login` - User login
-- `POST /register` - User registration
-- `POST /logout` - User logout
+### 🔐 Authentication
 
-### Posts
-- `GET /posts/` - Get all posts (with pagination)
-- `GET /posts/{id}` - Get post by ID
-- `POST /posts/` - Create new post
-- `PUT /posts/{id}` - Update post
-- `DELETE /posts/{id}` - Delete post
+- `POST /login` – User login
+- `POST /register` – User registration
+- `POST /logout` – User logout
 
-### Categories
-- `GET /category/` - Get all categories
-- `POST /category/` - Create new category
+### 📝 Posts
 
-### Profile
-- `GET /profile/` - Get current user profile
-- `GET /profile/{id}` - Get user profile by ID
+- `GET /posts/` – Fetch all posts (Paginated)
+- `GET /posts/{id}` – Get post by ID
+- `POST /posts/` – Create a new post
+- `PUT /posts/{id}` – Update a post
+- `DELETE /posts/{id}` – Delete a post
 
-## Security
+### 🏷 Categories
 
-The application implements Spring Security with the following features:
-- Session-based authentication
-- Redis session storage
-- Protected endpoints for authenticated users
-- CSRF protection disabled for API endpoints
+- `GET /category/` – Get all categories
+- `POST /category/` – Create a new category
 
-## Environment Profiles
+### 👤 User Profile
 
-### Local Profile
+- `GET /profile/` – Get current user profile
+- `GET /profile/{id}` – Fetch user profile by ID
+
+## 🔒 **Security & Authentication**
+
+- **Session-based authentication** using Spring Security
+- **Redis-backed session storage** for performance and scalability
+- **API protection** for authenticated users
+
+## 🌍 **Environment Profiles**
+
+### **Local Profile**
+
 - MongoDB running locally
 - Redis running locally
 - Debug logging enabled
 - No authentication for Redis
 
-### Production Profile
+### **Production Profile**
+
 - MongoDB Atlas connection
 - Redis Cloud connection
-- Basic logging
-- Authenticated Redis connection
+- Optimized logging
+- Secure Redis authentication
 
-## Building for Production
+## 🏗 **Building for Production**
 
-1. Set production environment variables
-2. Build the application:
 ```bash
 ./mvnw clean package
-```
-
-3. Run the built JAR:
-```bash
 java -jar target/blog-backend-0.0.1-SNAPSHOT.jar
 ```
 
-## Contributing
+## 🤝 **Contributing**
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a new Pull Request
+1. **Fork the repository**
+2. **Create a feature branch**
+3. **Commit & push your changes**
+4. **Submit a Pull Request**
 
-## License
+## 📄 **License**
 
-[MIT License](LICENSE) 
+This project is licensed under the [MIT License](LICENSE).
+
+## 👤 **Author**
+
+- GitHub: [@akashramesh13](https://github.com/akashramesh13)
+- Portfolio: [akashramesh.in](https://www.akashramesh.in)
+
+---
+
+Built with :heart: using Spring Boot and MongoDB
