@@ -6,6 +6,8 @@ import com.akash.blog.backend.service.PostService;
 
 import jakarta.annotation.Nullable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -13,11 +15,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/posts")
 public class PostController {
+
+    private static final Logger logger = LoggerFactory.getLogger(PostController.class);
 
     @Autowired
     private PostService postService;
@@ -32,9 +35,14 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<PostDto> getPostById(@PathVariable UUID id, Authentication authentication) {
+    public ResponseEntity<PostDto> getPostById(@PathVariable String id, Authentication authentication) {
         String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
-        return ResponseEntity.ok(postService.getPostById(id, username));
+        PostDto post = postService.getPostById(id, username);
+        if (post.getCoverImage() != null) {
+            logger.info("Sending post with cover image that starts with: {}", 
+                post.getCoverImage().substring(0, Math.min(50, post.getCoverImage().length())));
+        }
+        return ResponseEntity.ok(post);
     }
 
     @PostMapping
@@ -43,12 +51,12 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostDto> updatePost(@PathVariable UUID id, @RequestBody PostDto postDto, Authentication authentication) {
+    public ResponseEntity<PostDto> updatePost(@PathVariable String id, @RequestBody PostDto postDto, Authentication authentication) {
         return ResponseEntity.ok(postService.updatePost(id, postDto, authentication.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable UUID id, Authentication authentication) {
+    public ResponseEntity<Void> deletePost(@PathVariable String id, Authentication authentication) {
         postService.deletePost(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }

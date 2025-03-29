@@ -2,9 +2,6 @@ package com.akash.blog.backend.controller;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,20 +26,32 @@ public class ProfileController {
     }
 
     @GetMapping({"/{profileId}", "/"})
-    public ResponseEntity<UserDTO> getProfile(@PathVariable(required = false) UUID profileId) {
-        logger.info("Fetching profile for user ID: " + profileId);
+    public ResponseEntity<UserDTO> getProfile(@PathVariable(required = false) String profileId) {
+        logger.info("Fetching profile for user ID: {}", profileId);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String loggedInUsername = authentication != null ? authentication.getName() : null;
 
-        UUID loggedinUserId = userService.getUserProfileByUsername(loggedInUsername).getId();
+        String loggedInUserId = null;
+        if (loggedInUsername != null) {
+            UserDTO loggedInUser = userService.getUserProfileByUsername(loggedInUsername);
+            if (loggedInUser != null) {
+                loggedInUserId = loggedInUser.getId();
+            }
+        }
         
         // If profileId is null (i.e., "/profile/" was accessed), default to the logged-in user's ID
-        UUID actualProfileId = profileId != null ? profileId : loggedinUserId;
+        String actualProfileId = profileId != null ? profileId : loggedInUserId;
 
-        UserDTO userProfile = userService.getUserProfileById(actualProfileId); 
+        if (actualProfileId == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        UserDTO userProfile = userService.getUserProfileById(actualProfileId);
+        if (userProfile == null) {
+            return ResponseEntity.notFound().build();
+        }
 
         return ResponseEntity.ok(userProfile);
     }
-
 }
