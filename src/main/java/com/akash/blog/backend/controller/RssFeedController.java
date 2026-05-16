@@ -2,7 +2,14 @@ package com.akash.blog.backend.controller;
 
 import com.akash.blog.backend.dto.PostDto;
 import com.akash.blog.backend.service.PostService;
-import com.rometools.rome.feed.synd.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rometools.rome.feed.synd.SyndContent;
+import com.rometools.rome.feed.synd.SyndContentImpl;
+import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.rome.feed.synd.SyndEntryImpl;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.feed.synd.SyndFeedImpl;
 import com.rometools.rome.io.SyndFeedOutput;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,55 +26,100 @@ import java.util.List;
 @RestController
 public class RssFeedController {
 
-	@Autowired
-	private PostService postService;
+    @Autowired
+    private PostService postService;
 
-	@GetMapping(value = "/rss.xml", produces = MediaType.APPLICATION_XML_VALUE)
-	public String rssFeed() throws Exception {
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-		SyndFeed feed = new SyndFeedImpl();
+    @GetMapping(value = "/rss.xml", produces = MediaType.APPLICATION_XML_VALUE)
+    public String rssFeed() throws Exception {
 
-		feed.setFeedType("rss_2.0");
-		feed.setTitle("Pixel Pursuit");
-		feed.setLink("https://blog.akashramesh.in");
-		feed.setDescription("Personal blog by Akash");
+        SyndFeed feed = new SyndFeedImpl();
 
-		Page<PostDto> posts = postService.getPostsByCategory(null, 0, 20);
+        feed.setFeedType("rss_2.0");
+        feed.setTitle("Pixel Pursuit");
+        feed.setLink("https://blog.akashramesh.in");
+        feed.setDescription("Personal blog by Akash");
 
-		List<SyndEntry> entries = new ArrayList<>();
+        Page<PostDto> posts = postService.getPostsByCategory(null, 0, 20);
 
-		for (PostDto post : posts.getContent()) {
+        List<SyndEntry> entries = new ArrayList<>();
 
-			SyndEntry entry = new SyndEntryImpl();
+        for (PostDto post : posts.getContent()) {
 
-			entry.setTitle(post.getTitle());
+            SyndEntry entry = new SyndEntryImpl();
 
-			entry.setLink("https://blog.akashramesh.in/posts/" + post.getId());
+            entry.setTitle(post.getTitle());
 
-			entry.setPublishedDate(Date.from(post.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant()));
+            entry.setLink(
+                "https://blog.akashramesh.in/posts/" + post.getId()
+            );
 
-			SyndContent description = new SyndContentImpl();
+            entry.setPublishedDate(
+                Date.from(
+                    post.getCreatedAt()
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                )
+            );
 
-			description.setType("text/plain");
-			
-			String content = post.getContent() != null
-				    ? post.getContent()
-				    : "";
+            SyndContent description = new SyndContentImpl();
 
-				String excerpt = content.length() > 200
-				    ? content.substring(0, 200) + "..."
-				    : content;
+            description.setType("text/plain");
 
+            String content = extractPlainText(post.getContent());
 
-			description.setValue(excerpt != null ? excerpt : "Read more on Pixel Pursuit");
+            String excerpt = content.length() > 200
+                ? content.substring(0, 200) + "..."
+                : content;
 
-			entry.setDescription(description);
+            description.setValue(
+                excerpt.isBlank()
+                    ? "Read more on Pixel Pursuit"
+                    : excerpt
+            );
 
-			entries.add(entry);
-		}
+            entry.setDescription(description);
 
-		feed.setEntries(entries);
+            entries.add(entry);
+        }
 
-		return new SyndFeedOutput().outputString(feed);
-	}
+        feed.setEntries(entries);
+
+        return new SyndFeedOutput().outputString(feed);
+    }
+
+    private String extractPlainText(String quillJson) {
+
+        if (quillJson == null || quillJson.isBlank()) {
+            return "";
+        }
+
+        try {
+
+            JsonNode root = objectMapper.readTree(quillJson);
+
+            JsonNode ops = root.get("ops");
+
+            StringBuilder plainText = new StringBuilder();
+
+            if (ops != null && ops.isArray()) {
+
+                for (JsonNode op : ops) {
+
+                    JsonNode insert = op.get("insert");
+
+                    if (insert != null && insert.isTextual()) {
+                        plainText.append(insert.asText());
+                    }
+                }
+            }
+
+            return plainText.toString().replace("\n", " ").trim();
+
+        } catch (Exception e) {
+
+            return "";
+        }
+    }
 }
