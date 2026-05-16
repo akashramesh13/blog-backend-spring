@@ -52,7 +52,7 @@ public class RssFeedController {
             entry.setTitle(post.getTitle());
 
             entry.setLink(
-                "https://blog.akashramesh.in/posts/" + post.getId()
+                "https://blog.akashramesh.in/post/view/" + post.getId()
             );
 
             entry.setPublishedDate(
