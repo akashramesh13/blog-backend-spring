@@ -47,7 +47,7 @@ public class LoginController {
 						SecurityContextHolder.getContext());
 
 				request.getSession().setAttribute("userId", user.getId());
-				UserDTO userDto = new UserDTO(user.getId(), user.getUsername());
+				UserDTO userDto = new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
 				logger.info("User {} logged in successfully", user.getUsername());
 				return ResponseEntity.ok(userDto);
 			} else {
