@@ -20,7 +20,7 @@ public class UserService {
 
     public UserDTO getUserProfileByUsername(String username) {
         User user = userRepository.findByUsername(username);
-        return user != null ? new UserDTO(user.getId(), user.getUsername()) : null;
+        return user != null ? new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle()) : null;
     }
 
     public User authenticate(String username, String password) {
@@ -39,12 +39,12 @@ public class UserService {
         
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         User savedUser = userRepository.save(user);
-        return new UserDTO(savedUser.getId(), savedUser.getUsername());
+        return new UserDTO(savedUser.getId(), savedUser.getUsername(), savedUser.getAvatar(), savedUser.getBio(), savedUser.getProfileTitle());
     }
     
     public UserDTO getUserProfileById(String userId) {
         Optional<User> userOpt = userRepository.findById(userId);
-        return userOpt.map(user -> new UserDTO(user.getId(), user.getUsername())).orElse(null);
+        return userOpt.map(user -> new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle())).orElse(null);
     }
 
     public UserDTO updateUser(String id, User updatedUser) {
@@ -65,8 +65,38 @@ public class UserService {
                 user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
             }
             userRepository.save(user);
-            return new UserDTO(user.getId(), user.getUsername());
+            return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
         }
         return null;
+    }
+
+    public UserDTO updateAvatar(String username, String avatarData) {
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            user.setAvatar(avatarData);
+            userRepository.save(user);
+            return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
+        }
+        throw new RuntimeException("User not found");
+    }
+
+    public UserDTO updateBio(String username, String bioData) {
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            user.setBio(bioData);
+            userRepository.save(user);
+            return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
+        }
+        throw new RuntimeException("User not found");
+    }
+
+    public UserDTO updateProfileTitle(String username, String profileTitle) {
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            user.setProfileTitle(profileTitle);
+            userRepository.save(user);
+            return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
+        }
+        throw new RuntimeException("User not found");
     }
 }

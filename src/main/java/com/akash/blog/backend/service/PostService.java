@@ -47,21 +47,31 @@ public class PostService {
         }
     }
     
-    public Page<PostDto> getPostsByCategory(String categoryName, int page, int size) {
+    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size) {
         try {
             Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
             Page<Post> postPage;
 
-            if (categoryName != null && !categoryName.isEmpty()) {
-                // First find the category by name
+            boolean hasCategory = categoryName != null && !categoryName.isEmpty();
+            boolean hasSearch = search != null && !search.isEmpty();
+
+            if (hasCategory) {
                 Category category = categoryRepository.findByName(categoryName)
                     .orElseThrow(() -> new RuntimeException("Category not found: " + categoryName));
                 
                 logger.info("Found category: {} with id: {}", categoryName, category.getId());
-                postPage = postRepository.findByCategoryId(category.getId(), pageable);
+                if (hasSearch) {
+                    postPage = postRepository.findByCategoryIdAndTitleContainingIgnoreCase(category.getId(), search, pageable);
+                } else {
+                    postPage = postRepository.findByCategoryId(category.getId(), pageable);
+                }
                 logger.info("Fetching posts for category: {}", categoryName);
             } else {
-                postPage = postRepository.findAll(pageable);
+                if (hasSearch) {
+                    postPage = postRepository.findByTitleContainingIgnoreCase(search, pageable);
+                } else {
+                    postPage = postRepository.findAll(pageable);
+                }
                 logger.info("Fetching all posts");
             }
 
@@ -187,7 +197,7 @@ public class PostService {
     }
 
     private UserDTO convertUserToUserDto(User user) {
-        return new UserDTO(user.getId(), user.getUsername());
+        return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
     }
 
     private PostDto convertToDto(Post post) {

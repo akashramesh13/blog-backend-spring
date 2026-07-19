@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.service.UserService;
 
+import java.util.Map;
+
 @RequestMapping("/profile")
 @RestController
 public class ProfileController {
@@ -53,5 +55,53 @@ public class ProfileController {
         }
 
         return ResponseEntity.ok(userProfile);
+    }
+
+    @PutMapping("/avatar")
+    public ResponseEntity<UserDTO> updateAvatar(@RequestBody Map<String, String> payload) {
+        String avatarData = payload.get("avatar");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loggedInUsername = authentication != null ? authentication.getName() : null;
+        if (loggedInUsername == null) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            UserDTO updatedUser = userService.updateAvatar(loggedInUsername, avatarData);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/bio")
+    public ResponseEntity<UserDTO> updateBio(@RequestBody Map<String, String> payload) {
+        String bioData = payload.get("bio");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loggedInUsername = authentication != null ? authentication.getName() : null;
+        if (loggedInUsername == null) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            UserDTO updatedUser = userService.updateBio(loggedInUsername, bioData);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/title")
+    public ResponseEntity<UserDTO> updateProfileTitle(@RequestBody Map<String, String> payload) {
+        String profileTitle = payload.get("profileTitle");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String loggedInUsername = authentication != null ? authentication.getName() : null;
+        if (loggedInUsername == null) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            UserDTO updatedUser = userService.updateProfileTitle(loggedInUsername, profileTitle);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

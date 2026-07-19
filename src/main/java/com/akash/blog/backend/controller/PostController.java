@@ -28,10 +28,11 @@ public class PostController {
     @GetMapping("/")
     public Page<PostDto> getPosts(
         @RequestParam(required = false) String category, 
+        @RequestParam(required = false) String search,
         @RequestParam(defaultValue = "0") int page, 
         @RequestParam(defaultValue = "10") int size
     ) {
-        return postService.getPostsByCategory(category, page, size);
+        return postService.getPostsByCategory(category, search, page, size);
     }
 
     @GetMapping("/{id}")
