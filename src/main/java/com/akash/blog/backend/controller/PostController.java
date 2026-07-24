@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -47,12 +48,12 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto, Authentication authentication) {
+    public ResponseEntity<PostDto> createPost(@Valid @RequestBody PostDto postDto, Authentication authentication) {
         return ResponseEntity.ok(postService.createPost(postDto, authentication.getName()));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostDto> updatePost(@PathVariable String id, @RequestBody PostDto postDto, Authentication authentication) {
+    public ResponseEntity<PostDto> updatePost(@PathVariable String id, @Valid @RequestBody PostDto postDto, Authentication authentication) {
         return ResponseEntity.ok(postService.updatePost(id, postDto, authentication.getName()));
     }
 

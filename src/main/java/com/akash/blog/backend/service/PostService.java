@@ -16,9 +16,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,157 +39,122 @@ public class PostService {
     private CategoryRepository categoryRepository;
 
     public List<PostDto> getAllPosts(String username) {
-        try {
-            return postRepository.findAll().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
-        } catch (Exception e) {
-            logger.error("Error fetching all posts", e);
-            throw new RuntimeException("Failed to fetch posts");
-        }
+        return postRepository.findAll().stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
     }
     
     public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size) {
-        try {
-            Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-            Page<Post> postPage;
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Post> postPage;
 
-            boolean hasCategory = categoryName != null && !categoryName.isEmpty();
-            boolean hasSearch = search != null && !search.isEmpty();
+        boolean hasCategory = categoryName != null && !categoryName.isEmpty();
+        boolean hasSearch = search != null && !search.isEmpty();
 
-            if (hasCategory) {
-                Category category = categoryRepository.findByName(categoryName)
-                    .orElseThrow(() -> new RuntimeException("Category not found: " + categoryName));
-                
-                logger.info("Found category: {} with id: {}", categoryName, category.getId());
-                if (hasSearch) {
-                    postPage = postRepository.findByCategoryIdAndTitleContainingIgnoreCase(category.getId(), search, pageable);
-                } else {
-                    postPage = postRepository.findByCategoryId(category.getId(), pageable);
-                }
-                logger.info("Fetching posts for category: {}", categoryName);
+        if (hasCategory) {
+            Category category = categoryRepository.findByName(categoryName)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found: " + categoryName));
+            
+            logger.info("Found category: {} with id: {}", categoryName, category.getId());
+            if (hasSearch) {
+                postPage = postRepository.findByCategoryIdAndTitleContainingIgnoreCase(category.getId(), search, pageable);
             } else {
-                if (hasSearch) {
-                    postPage = postRepository.findByTitleContainingIgnoreCase(search, pageable);
-                } else {
-                    postPage = postRepository.findAll(pageable);
-                }
-                logger.info("Fetching all posts");
+                postPage = postRepository.findByCategoryId(category.getId(), pageable);
             }
-
-            return postPage.map(this::convertToDto);
-        } catch (Exception e) {
-            logger.error("Error fetching posts by category: {}", categoryName, e);
-            throw new RuntimeException("Failed to fetch posts: " + e.getMessage());
+            logger.info("Fetching posts for category: {}", categoryName);
+        } else {
+            if (hasSearch) {
+                postPage = postRepository.findByTitleContainingIgnoreCase(search, pageable);
+            } else {
+                postPage = postRepository.findAll(pageable);
+            }
+            logger.info("Fetching all posts");
         }
+
+        return postPage.map(this::convertToDto);
     }
 
     public PostDto getPostById(String id, String username) {
-        try {
-            return postRepository.findById(id)
-                .map(post -> convertToDto(post, username))
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        } catch (Exception e) {
-            logger.error("Error fetching post: {}", id, e);
-            throw new RuntimeException("Failed to fetch post");
-        }
+        return postRepository.findById(id)
+            .map(post -> convertToDto(post, username))
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
     }
 
     public PostDto createPost(PostDto postDto, String username) {
-        try {
-            User user = userRepository.findByUsername(username);
-            if (user == null) {
-                throw new RuntimeException("User not found");
-            }
-
-            Category category = null;
-            if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
-                category = categoryRepository.findById(postDto.getCategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-            }
-
-            Post post = new Post();
-            post.setTitle(postDto.getTitle());
-            post.setContent(postDto.getContent());
-            post.setUser(user);
-            post.setCategory(category);
-            post.setCreatedAt(LocalDateTime.now());
-            post.setUpdatedAt(LocalDateTime.now());
-
-            if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
-                String base64Image = postDto.getCoverImage();
-                logger.info("Received cover image with length: {}", base64Image.length());
-                logger.info("Cover image starts with: {}", base64Image.substring(0, Math.min(50, base64Image.length())));
-                if (base64Image.contains(",")) {
-                    base64Image = base64Image.split(",")[1];
-                    logger.info("Stripped prefix, new length: {}", base64Image.length());
-                }
-                post.setCoverImage(base64Image.trim());
-                logger.info("Final cover image length: {}", base64Image.trim().length());
-            }
-
-            post = postRepository.save(post);
-            return convertToDto(post);
-        } catch (Exception e) {
-            logger.error("Error creating post", e);
-            throw new RuntimeException("Failed to create post");
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
         }
+
+        Category category = null;
+        if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
+            category = categoryRepository.findById(postDto.getCategory().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+        }
+
+        Post post = new Post();
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        post.setUser(user);
+        post.setCategory(category);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
+
+        if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
+            post.setCoverImage(extractBase64Data(postDto.getCoverImage()));
+        }
+
+        post = postRepository.save(post);
+        return convertToDto(post);
     }
 
     public PostDto updatePost(String id, PostDto postDto, String username) {
-        try {
-            Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+        Post post = postRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
-            if (!post.getUser().getUsername().equals(username)) {
-                throw new RuntimeException("Unauthorized");
-            }
-
-            Category category = null;
-            if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
-                category = categoryRepository.findById(postDto.getCategory().getId())
-                    .orElseThrow(() -> new RuntimeException("Category not found"));
-            }
-
-            post.setTitle(postDto.getTitle());
-            post.setContent(postDto.getContent());
-            post.setCategory(category);
-            post.setUpdatedAt(LocalDateTime.now());
-
-            if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
-                String base64Image = postDto.getCoverImage();
-                logger.info("Received cover image with length: {}", base64Image.length());
-                logger.info("Cover image starts with: {}", base64Image.substring(0, Math.min(50, base64Image.length())));
-                if (base64Image.contains(",")) {
-                    base64Image = base64Image.split(",")[1];
-                    logger.info("Stripped prefix, new length: {}", base64Image.length());
-                }
-                post.setCoverImage(base64Image.trim());
-                logger.info("Final cover image length: {}", base64Image.trim().length());
-            }
-
-            post = postRepository.save(post);
-            return convertToDto(post);
-        } catch (Exception e) {
-            logger.error("Error updating post: {}", id, e);
-            throw new RuntimeException("Failed to update post");
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to update this post");
         }
+
+        Category category = null;
+        if (postDto.getCategory() != null && postDto.getCategory().getId() != null) {
+            category = categoryRepository.findById(postDto.getCategory().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found"));
+        }
+
+        post.setTitle(postDto.getTitle());
+        post.setContent(postDto.getContent());
+        post.setCategory(category);
+        post.setUpdatedAt(LocalDateTime.now());
+
+        if (postDto.getCoverImage() != null && !postDto.getCoverImage().isEmpty()) {
+            post.setCoverImage(extractBase64Data(postDto.getCoverImage()));
+        }
+
+        post = postRepository.save(post);
+        return convertToDto(post);
     }
 
     public void deletePost(String id, String username) {
-        try {
-            Post post = postRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
+        Post post = postRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
 
-            if (!post.getUser().getUsername().equals(username)) {
-                throw new RuntimeException("Unauthorized");
-            }
-
-            postRepository.deleteById(id);
-        } catch (Exception e) {
-            logger.error("Error deleting post: {}", id, e);
-            throw new RuntimeException("Failed to delete post");
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Unauthorized to delete this post");
         }
+
+        postRepository.deleteById(id);
+    }
+    
+    private String extractBase64Data(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) {
+            return null;
+        }
+        int commaIndex = base64Image.indexOf(",");
+        if (commaIndex != -1 && commaIndex < base64Image.length() - 1) {
+            return base64Image.substring(commaIndex + 1).trim();
+        }
+        return base64Image.trim();
     }
 
     private PostDto convertToDto(Post post, String username) {
@@ -215,14 +182,10 @@ public class PostService {
         
         if (post.getCoverImage() != null) {
             String base64Image = post.getCoverImage();
-            logger.info("Original image from DB: {}", base64Image.substring(0, Math.min(50, base64Image.length())));
-            
             if (!base64Image.startsWith("data:image")) {
                 base64Image = "data:image/jpeg;base64," + base64Image;
-                logger.info("Added prefix, image now starts with: {}", base64Image.substring(0, Math.min(50, base64Image.length())));
             }
             dto.setCoverImage(base64Image);
-            logger.info("Final image in DTO starts with: {}", base64Image.substring(0, Math.min(50, base64Image.length())));
         }
         
         return dto;

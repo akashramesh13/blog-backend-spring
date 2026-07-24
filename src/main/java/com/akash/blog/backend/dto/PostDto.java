@@ -1,5 +1,6 @@
 package com.akash.blog.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +11,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostDto {
     private String id;
+    
+    @NotBlank(message = "Title cannot be blank")
     private String title;
+    
+    @NotBlank(message = "Content cannot be blank")
     private String content;
     private UserDTO user;
     private LocalDateTime createdAt;

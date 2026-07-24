@@ -20,12 +20,12 @@ public class SecurityConfig {
             .cors().and()
             .csrf().disable()
             .authorizeHttpRequests()
-            // Public routes (anyone can access these)
-            .requestMatchers("/", "/posts/", "/posts/**", "/login", "/register", "/category/**", "/actuator/health", "/rss.xml").permitAll()
             // Restrict edit, create, and delete to authenticated users only
-            .requestMatchers(HttpMethod.POST, "/posts/").authenticated()
+            .requestMatchers(HttpMethod.POST, "/posts", "/posts/").authenticated()
             .requestMatchers(HttpMethod.PUT, "/posts/{id}").authenticated()
             .requestMatchers(HttpMethod.DELETE, "/posts/{id}").authenticated()
+            // Public routes (anyone can access these)
+            .requestMatchers("/", "/posts/", "/posts/**", "/login", "/register", "/category/**", "/actuator/health", "/rss.xml").permitAll()
             .anyRequest().authenticated()  // Require authentication for any other requests
             .and()
             .formLogin().disable()

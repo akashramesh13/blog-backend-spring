@@ -4,8 +4,10 @@ import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.User;
 import com.akash.blog.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -34,7 +36,7 @@ public class UserService {
     public UserDTO createUser(User user) {
         // Check if username already exists
         if (userRepository.findByUsername(user.getUsername()) != null) {
-            throw new RuntimeException("Username already exists");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
         }
         
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -56,7 +58,7 @@ public class UserService {
             if (!user.getUsername().equals(updatedUser.getUsername())) {
                 User existingUser = userRepository.findByUsername(updatedUser.getUsername());
                 if (existingUser != null) {
-                    throw new RuntimeException("Username already exists");
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists");
                 }
             }
             
@@ -77,7 +79,7 @@ public class UserService {
             userRepository.save(user);
             return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
         }
-        throw new RuntimeException("User not found");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
     public UserDTO updateBio(String username, String bioData) {
@@ -87,7 +89,7 @@ public class UserService {
             userRepository.save(user);
             return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
         }
-        throw new RuntimeException("User not found");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 
     public UserDTO updateProfileTitle(String username, String profileTitle) {
@@ -97,6 +99,6 @@ public class UserService {
             userRepository.save(user);
             return new UserDTO(user.getId(), user.getUsername(), user.getAvatar(), user.getBio(), user.getProfileTitle());
         }
-        throw new RuntimeException("User not found");
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
     }
 }

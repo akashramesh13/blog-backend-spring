@@ -26,9 +26,9 @@ public class CustomSessionFilter extends OncePerRequestFilter {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication != null && authentication.isAuthenticated()) {
-            logger.info("Authenticated user: {}", authentication.getName());
+            logger.debug("Authenticated user: {}", authentication.getName());
         } else {
-            logger.warn("Authentication is null or unauthenticated");
+            logger.debug("Authentication is null or unauthenticated");
         }
 
         filterChain.doFilter(request, response);
