@@ -31,9 +31,10 @@ public class PostController {
         @RequestParam(required = false) String category, 
         @RequestParam(required = false) String search,
         @RequestParam(defaultValue = "0") int page, 
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(defaultValue = "latest") String sortBy
     ) {
-        return postService.getPostsByCategory(category, search, page, size);
+        return postService.getPostsByCategory(category, search, page, size, sortBy);
     }
 
     @GetMapping("/{id}")
@@ -61,5 +62,28 @@ public class PostController {
     public ResponseEntity<Void> deletePost(@PathVariable String id, Authentication authentication) {
         postService.deletePost(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/like")
+    public ResponseEntity<PostDto> toggleLike(@PathVariable String id, Authentication authentication) {
+        return ResponseEntity.ok(postService.toggleLike(id, authentication.getName()));
+    }
+
+    @GetMapping("/user/{userId}")
+    public Page<PostDto> getPostsByUser(
+        @PathVariable String userId,
+        @RequestParam(defaultValue = "0") int page, 
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        return postService.getPostsByUserId(userId, page, size);
+    }
+
+    @GetMapping("/liked/{userId}")
+    public Page<PostDto> getLikedPostsByUser(
+        @PathVariable String userId,
+        @RequestParam(defaultValue = "0") int page, 
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        return postService.getLikedPostsByUserId(userId, page, size);
     }
 }

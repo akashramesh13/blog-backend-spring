@@ -11,6 +11,10 @@ import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 
 public interface PostRepository extends MongoRepository<Post, String> {
+    Page<Post> findByUserId(String userId, Pageable pageable);
+    
+    Page<Post> findByLikedByContaining(String userId, Pageable pageable);
+    
     List<Post> findByUserId(String userId);
     
     Page<Post> findByCategoryId(String categoryId, Pageable pageable);

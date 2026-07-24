@@ -44,8 +44,9 @@ public class PostService {
             .collect(Collectors.toList());
     }
     
-    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size, String sortBy) {
+        String sortProperty = "likes".equalsIgnoreCase(sortBy) ? "likesCount" : "createdAt";
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortProperty).descending());
         Page<Post> postPage;
 
         boolean hasCategory = categoryName != null && !categoryName.isEmpty();
@@ -146,6 +147,37 @@ public class PostService {
         postRepository.deleteById(id);
     }
     
+    public PostDto toggleLike(String id, String username) {
+        Post post = postRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
+        }
+        
+        if (post.getLikedBy().contains(user.getId())) {
+            post.getLikedBy().remove(user.getId());
+            post.setLikesCount(post.getLikesCount() - 1);
+        } else {
+            post.getLikedBy().add(user.getId());
+            post.setLikesCount(post.getLikesCount() + 1);
+        }
+        
+        post = postRepository.save(post);
+        return convertToDto(post, username);
+    }
+    
+    public Page<PostDto> getPostsByUserId(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return postRepository.findByUserId(userId, pageable).map(this::convertToDto);
+    }
+    
+    public Page<PostDto> getLikedPostsByUserId(String userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return postRepository.findByLikedByContaining(userId, pageable).map(this::convertToDto);
+    }
+    
     private String extractBase64Data(String base64Image) {
         if (base64Image == null || base64Image.isEmpty()) {
             return null;
@@ -159,7 +191,13 @@ public class PostService {
 
     private PostDto convertToDto(Post post, String username) {
         PostDto dto = convertToDto(post);
-        dto.setOwner(post.getUser().getUsername().equals(username));
+        if (username != null && !username.isEmpty()) {
+            dto.setOwner(post.getUser().getUsername().equals(username));
+            User user = userRepository.findByUsername(username);
+            if (user != null) {
+                dto.setLiked(post.getLikedBy().contains(user.getId()));
+            }
+        }
         return dto;
     }
 
@@ -187,6 +225,8 @@ public class PostService {
             }
             dto.setCoverImage(base64Image);
         }
+        
+        dto.setLikesCount(post.getLikesCount());
         
         return dto;
     }

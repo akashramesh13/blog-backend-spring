@@ -23,4 +23,6 @@ public class PostDto {
     private boolean isOwner;
     private CategoryDto category;
     private String coverImage;
+    private int likesCount;
+    private boolean isLiked;
 }

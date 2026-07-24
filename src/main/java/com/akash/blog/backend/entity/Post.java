@@ -6,6 +6,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Document(collection = "posts")
 @Data
@@ -23,6 +25,10 @@ public class Post {
     private LocalDateTime createdAt;
     
     private LocalDateTime updatedAt;
+    
+    private Set<String> likedBy = new HashSet<>();
+    
+    private int likesCount = 0;
     
     @DBRef
     private Category category;
