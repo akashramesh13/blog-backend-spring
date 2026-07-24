@@ -32,9 +32,11 @@ public class PostController {
         @RequestParam(required = false) String search,
         @RequestParam(defaultValue = "0") int page, 
         @RequestParam(defaultValue = "10") int size,
-        @RequestParam(defaultValue = "latest") String sortBy
+        @RequestParam(defaultValue = "latest") String sortBy,
+        Authentication authentication
     ) {
-        return postService.getPostsByCategory(category, search, page, size, sortBy);
+        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
+        return postService.getPostsByCategory(category, search, page, size, sortBy, username);
     }
 
     @GetMapping("/{id}")
@@ -73,17 +75,21 @@ public class PostController {
     public Page<PostDto> getPostsByUser(
         @PathVariable String userId,
         @RequestParam(defaultValue = "0") int page, 
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        Authentication authentication
     ) {
-        return postService.getPostsByUserId(userId, page, size);
+        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
+        return postService.getPostsByUserId(userId, page, size, username);
     }
 
     @GetMapping("/liked/{userId}")
     public Page<PostDto> getLikedPostsByUser(
         @PathVariable String userId,
         @RequestParam(defaultValue = "0") int page, 
-        @RequestParam(defaultValue = "10") int size
+        @RequestParam(defaultValue = "10") int size,
+        Authentication authentication
     ) {
-        return postService.getLikedPostsByUserId(userId, page, size);
+        String username = (authentication != null && authentication.isAuthenticated()) ? authentication.getName() : "";
+        return postService.getLikedPostsByUserId(userId, page, size, username);
     }
 }

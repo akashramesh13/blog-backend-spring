@@ -44,7 +44,7 @@ public class PostService {
             .collect(Collectors.toList());
     }
     
-    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size, String sortBy) {
+    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size, String sortBy, String username) {
         String sortProperty = "likes".equalsIgnoreCase(sortBy) ? "likesCount" : "createdAt";
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortProperty).descending());
         Page<Post> postPage;
@@ -72,7 +72,7 @@ public class PostService {
             logger.info("Fetching all posts");
         }
 
-        return postPage.map(this::convertToDto);
+        return postPage.map(post -> convertToDto(post, username));
     }
 
     public PostDto getPostById(String id, String username) {
@@ -156,9 +156,13 @@ public class PostService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found");
         }
         
+        if (post.getLikedBy() == null) {
+            post.setLikedBy(new java.util.HashSet<>());
+        }
+        
         if (post.getLikedBy().contains(user.getId())) {
             post.getLikedBy().remove(user.getId());
-            post.setLikesCount(post.getLikesCount() - 1);
+            post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
         } else {
             post.getLikedBy().add(user.getId());
             post.setLikesCount(post.getLikesCount() + 1);
@@ -168,14 +172,14 @@ public class PostService {
         return convertToDto(post, username);
     }
     
-    public Page<PostDto> getPostsByUserId(String userId, int page, int size) {
+    public Page<PostDto> getPostsByUserId(String userId, int page, int size, String username) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return postRepository.findByUserId(userId, pageable).map(this::convertToDto);
+        return postRepository.findByUserId(userId, pageable).map(post -> convertToDto(post, username));
     }
     
-    public Page<PostDto> getLikedPostsByUserId(String userId, int page, int size) {
+    public Page<PostDto> getLikedPostsByUserId(String userId, int page, int size, String username) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return postRepository.findByLikedByContaining(userId, pageable).map(this::convertToDto);
+        return postRepository.findByLikedByContaining(userId, pageable).map(post -> convertToDto(post, username));
     }
     
     private String extractBase64Data(String base64Image) {
@@ -192,9 +196,9 @@ public class PostService {
     private PostDto convertToDto(Post post, String username) {
         PostDto dto = convertToDto(post);
         if (username != null && !username.isEmpty()) {
-            dto.setOwner(post.getUser().getUsername().equals(username));
+            dto.setOwner(post.getUser() != null && post.getUser().getUsername().equals(username));
             User user = userRepository.findByUsername(username);
-            if (user != null) {
+            if (user != null && post.getLikedBy() != null) {
                 dto.setLiked(post.getLikedBy().contains(user.getId()));
             }
         }

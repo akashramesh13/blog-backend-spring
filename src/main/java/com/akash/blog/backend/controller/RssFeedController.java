@@ -40,7 +40,7 @@ public class RssFeedController {
         feed.setTitle("Pixel Pursuit");
         feed.setLink("https://blog.akashramesh.in");
         feed.setDescription("Personal blog by Akash");
-        Page<PostDto> posts = postService.getPostsByCategory(null, null, 0, 20, "latest");
+        Page<PostDto> posts = postService.getPostsByCategory(null, null, 0, 20, "latest", null);
 
         List<SyndEntry> entries = new ArrayList<>();
 
