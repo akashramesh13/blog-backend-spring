@@ -233,6 +233,14 @@ public class PostService {
             dto.setCoverImage(base64Image);
         }
         
+        if (post.getThumbnail() != null) {
+            String base64Thumb = post.getThumbnail();
+            if (!base64Thumb.startsWith("data:image")) {
+                base64Thumb = "data:image/jpeg;base64," + base64Thumb;
+            }
+            dto.setThumbnail(base64Thumb);
+        }
+        
         dto.setLikesCount(post.getLikesCount());
         
         return dto;

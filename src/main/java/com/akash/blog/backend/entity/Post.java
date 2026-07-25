@@ -36,4 +36,5 @@ public class Post {
     private Category category;
     
     private String coverImage;
+    private String thumbnail;
 }
