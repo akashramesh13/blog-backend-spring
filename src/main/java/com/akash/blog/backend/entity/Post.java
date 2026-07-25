@@ -17,6 +17,8 @@ public class Post {
     
     private String title;
     
+    private String subtitle;
+    
     private String content;
     
     @DBRef

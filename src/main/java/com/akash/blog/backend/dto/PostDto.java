@@ -15,6 +15,8 @@ public class PostDto {
     @NotBlank(message = "Title cannot be blank")
     private String title;
     
+    private String subtitle;
+    
     @NotBlank(message = "Content cannot be blank")
     private String content;
     private UserDTO user;

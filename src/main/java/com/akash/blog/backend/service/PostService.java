@@ -95,6 +95,7 @@ public class PostService {
 
         Post post = new Post();
         post.setTitle(postDto.getTitle());
+        post.setSubtitle(postDto.getSubtitle());
         post.setContent(postDto.getContent());
         post.setUser(user);
         post.setCategory(category);
@@ -124,6 +125,7 @@ public class PostService {
         }
 
         post.setTitle(postDto.getTitle());
+        post.setSubtitle(postDto.getSubtitle());
         post.setContent(postDto.getContent());
         post.setCategory(category);
         post.setUpdatedAt(LocalDateTime.now());
@@ -213,6 +215,7 @@ public class PostService {
         PostDto dto = new PostDto();
         dto.setId(post.getId());
         dto.setTitle(post.getTitle());
+        dto.setSubtitle(post.getSubtitle());
         dto.setContent(post.getContent());
         dto.setUser(convertUserToUserDto(post.getUser()));
         dto.setCreatedAt(post.getCreatedAt());
