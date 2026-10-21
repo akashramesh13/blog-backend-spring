@@ -2,6 +2,7 @@ package com.akash.blog.backend.service;
 
 import com.akash.blog.backend.dto.CategoryDto;
 import com.akash.blog.backend.dto.PostDto;
+import com.akash.blog.backend.dto.PostSummaryDto;
 import com.akash.blog.backend.dto.UserDTO;
 import com.akash.blog.backend.entity.Category;
 import com.akash.blog.backend.entity.Post;
@@ -44,7 +45,7 @@ public class PostService {
             .collect(Collectors.toList());
     }
     
-    public Page<PostDto> getPostsByCategory(String categoryName, String search, int page, int size, String sortBy, String username) {
+    public Page<PostSummaryDto> getPostsByCategory(String categoryName, String search, int page, int size, String sortBy, String username) {
         String sortProperty = "likes".equalsIgnoreCase(sortBy) ? "likesCount" : "createdAt";
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortProperty).descending());
         Page<Post> postPage;
@@ -72,7 +73,7 @@ public class PostService {
             logger.info("Fetching all posts");
         }
 
-        return postPage.map(post -> convertToDto(post, username));
+        return postPage.map(post -> convertToSummaryDto(post, username));
     }
 
     public PostDto getPostById(String id, String username) {
@@ -174,14 +175,14 @@ public class PostService {
         return convertToDto(post, username);
     }
     
-    public Page<PostDto> getPostsByUserId(String userId, int page, int size, String username) {
+    public Page<PostSummaryDto> getPostsByUserId(String userId, int page, int size, String username) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return postRepository.findByUserId(userId, pageable).map(post -> convertToDto(post, username));
+        return postRepository.findByUserId(userId, pageable).map(post -> convertToSummaryDto(post, username));
     }
     
-    public Page<PostDto> getLikedPostsByUserId(String userId, int page, int size, String username) {
+    public Page<PostSummaryDto> getLikedPostsByUserId(String userId, int page, int size, String username) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return postRepository.findByLikedByContaining(userId, pageable).map(post -> convertToDto(post, username));
+        return postRepository.findByLikedByContaining(userId, pageable).map(post -> convertToSummaryDto(post, username));
     }
     
     private String extractBase64Data(String base64Image) {
@@ -193,6 +194,31 @@ public class PostService {
             return base64Image.substring(commaIndex + 1).trim();
         }
         return base64Image.trim();
+    }
+
+    private PostSummaryDto convertToSummaryDto(Post post, String username) {
+        PostSummaryDto dto = new PostSummaryDto();
+        dto.setId(post.getId());
+        dto.setTitle(post.getTitle());
+        dto.setSubtitle(post.getSubtitle());
+        dto.setUser(convertUserToUserDto(post.getUser()));
+        dto.setCreatedAt(post.getCreatedAt());
+        dto.setUpdatedAt(post.getUpdatedAt());
+        dto.setLikesCount(post.getLikesCount());
+
+        if (post.getCategory() != null) {
+            dto.setCategory(new CategoryDto(post.getCategory().getId(), post.getCategory().getName()));
+        }
+
+        if (username != null && !username.isEmpty()) {
+            dto.setOwner(post.getUser() != null && post.getUser().getUsername().equals(username));
+            User user = userRepository.findByUsername(username);
+            if (user != null && post.getLikedBy() != null) {
+                dto.setLiked(post.getLikedBy().contains(user.getId()));
+            }
+        }
+
+        return dto;
     }
 
     private PostDto convertToDto(Post post, String username) {

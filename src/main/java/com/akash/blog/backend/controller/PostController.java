@@ -1,6 +1,7 @@
 package com.akash.blog.backend.controller;
 
 import com.akash.blog.backend.dto.PostDto;
+import com.akash.blog.backend.dto.PostSummaryDto;
 import com.akash.blog.backend.entity.Post;
 import com.akash.blog.backend.service.PostService;
 
@@ -27,7 +28,7 @@ public class PostController {
     private PostService postService;
 
     @GetMapping("/")
-    public Page<PostDto> getPosts(
+    public Page<PostSummaryDto> getPosts(
         @RequestParam(required = false) String category, 
         @RequestParam(required = false) String search,
         @RequestParam(defaultValue = "0") int page, 
@@ -72,7 +73,7 @@ public class PostController {
     }
 
     @GetMapping("/user/{userId}")
-    public Page<PostDto> getPostsByUser(
+    public Page<PostSummaryDto> getPostsByUser(
         @PathVariable String userId,
         @RequestParam(defaultValue = "0") int page, 
         @RequestParam(defaultValue = "10") int size,
@@ -83,7 +84,7 @@ public class PostController {
     }
 
     @GetMapping("/liked/{userId}")
-    public Page<PostDto> getLikedPostsByUser(
+    public Page<PostSummaryDto> getLikedPostsByUser(
         @PathVariable String userId,
         @RequestParam(defaultValue = "0") int page, 
         @RequestParam(defaultValue = "10") int size,
