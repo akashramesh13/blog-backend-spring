@@ -3,6 +3,7 @@ package com.akash.blog.backend.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +24,9 @@ public class CategoryController {
 
     @GetMapping("/")
     public ResponseEntity<List<CategoryDto>> findAllCategories() {
-        return ResponseEntity.ok(categoryService.findAllCategories());
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300")
+            .body(categoryService.findAllCategories());
     }
 
     @PostMapping("/")

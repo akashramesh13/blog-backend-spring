@@ -11,6 +11,9 @@ import org.springframework.data.mongodb.repository.Query;
 import java.util.List;
 
 public interface PostRepository extends MongoRepository<Post, String> {
+    @Query(value = "{}", fields = "{ 'content': 0, 'coverImage': 0, 'thumbnail': 0 }")
+    Page<Post> findAllSummaries(Pageable pageable);
+
     Page<Post> findByUserId(String userId, Pageable pageable);
     
     Page<Post> findByLikedByContaining(String userId, Pageable pageable);

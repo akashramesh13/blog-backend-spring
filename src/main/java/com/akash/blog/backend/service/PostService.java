@@ -68,7 +68,7 @@ public class PostService {
             if (hasSearch) {
                 postPage = postRepository.findByTitleContainingIgnoreCase(search, pageable);
             } else {
-                postPage = postRepository.findAll(pageable);
+                postPage = postRepository.findAllSummaries(pageable);
             }
             logger.info("Fetching all posts");
         }
@@ -201,7 +201,7 @@ public class PostService {
         dto.setId(post.getId());
         dto.setTitle(post.getTitle());
         dto.setSubtitle(post.getSubtitle());
-        dto.setUser(convertUserToUserDto(post.getUser()));
+        dto.setUser(convertUserToSummaryUserDto(post.getUser()));
         dto.setCreatedAt(post.getCreatedAt());
         dto.setUpdatedAt(post.getUpdatedAt());
         dto.setLikesCount(post.getLikesCount());
@@ -219,6 +219,14 @@ public class PostService {
         }
 
         return dto;
+    }
+
+    private UserDTO convertUserToSummaryUserDto(User user) {
+        if (user == null) {
+            return null;
+        }
+        // Lightweight DTO for feed summaries: strictly excludes avatar base64 data, bio, and profileTitle
+        return new UserDTO(user.getId(), user.getUsername());
     }
 
     private PostDto convertToDto(Post post, String username) {

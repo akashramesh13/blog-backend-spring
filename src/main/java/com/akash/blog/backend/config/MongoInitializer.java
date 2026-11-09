@@ -34,6 +34,18 @@ public class MongoInitializer implements CommandLineRunner {
             new Index().on("createdAt", org.springframework.data.domain.Sort.Direction.DESC).background()
         );
 
+        mongoTemplate.indexOps("posts").ensureIndex(
+            new Index().on("likesCount", org.springframework.data.domain.Sort.Direction.DESC).background()
+        );
+
+        mongoTemplate.indexOps("posts").ensureIndex(
+            new Index().on("category.$id", org.springframework.data.domain.Sort.Direction.ASC).background()
+        );
+
+        mongoTemplate.indexOps("posts").ensureIndex(
+            new Index().on("user.$id", org.springframework.data.domain.Sort.Direction.ASC).background()
+        );
+
         mongoTemplate.indexOps("users").ensureIndex(
             new Index().on("username", org.springframework.data.domain.Sort.Direction.ASC).unique().background()
         );
